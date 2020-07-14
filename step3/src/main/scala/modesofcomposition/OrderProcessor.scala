@@ -10,12 +10,19 @@ object OrderProcessor {
   def processCustomerOrder[F[_]: Sync: Parallel: Clock: UuidRef: Inventory: Publish](
     order: CustomerOrder): F[Unit] = {
 
-    val nonAvailableSkus: Chain[Sku] = ???
+    val nonAvailableSkus: Chain[Sku] = {
+      val customerRegion = order.customer.region
+      order.items.map(_.sku).filter(_.nonAvailableRegions.contains(customerRegion))
+    }
 
     if (nonAvailableSkus.isEmpty)
       processAvailableOrder[F](order)
     else {
-      ???
+      for {
+        currentTime <- JavaTime[F].getInstant //F[Instant]
+        message     <- F.pure(Unavailable(NonEmptySet.fromSetUnsafe(SortedSet.from(nonAvailableSkus.iterator)), order, currentTime))
+        _           <- F.publish(Topic.Unavailable, message.asJsonBytes)
+        } yield ()
     }
   }
 

@@ -6,3 +6,7 @@
 
 project/target
 target
+.metals
+.bloop
+.ctags_srcs
+*/.ctags_srcs

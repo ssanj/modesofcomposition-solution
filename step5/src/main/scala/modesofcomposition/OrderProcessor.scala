@@ -10,7 +10,7 @@ object OrderProcessor {
   /** Consumes a stream of incoming JSON order messages, processing each concurrently */
   def processMsgStream[F[_]: Concurrent: Parallel: Clock: UuidRef: SkuLookup: CustomerLookup: Inventory: Publish](
     msgs: fs2.Stream[F, Array[Byte]], maxParallel: Int = 20): fs2.Stream[F, Unit] =
-    ???
+    msgs.parEvalMapUnordered(maxParallel)(processMsg[F])
 
 
 
